@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Los llamamos en un rato</title>
+<meta property="og:title" content="Tengan el teléfono cerca…">
+<meta property="og:description" content="Los vamos a llamar. Abran esto para ver cuánto falta.">
+<meta name="description" content="Los vamos a llamar. Abran esto para ver cuánto falta.">
+<meta name="twitter:card" content="summary">
+<meta name="robots" content="noindex, noarchive">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,300;1,9..144,500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0e1116; --ink2:#1a2028; --bone:#efe7d8; --gold:#c9a468; --blush:#e7b1ae;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; }
+  body{
+    min-height:100svh; display:flex; align-items:center; justify-content:center;
+    background: radial-gradient(120% 90% at 50% 0%, var(--ink2) 0%, var(--ink) 62%);
+    color:var(--bone); font-family:system-ui, -apple-system, "Segoe UI", sans-serif;
+    padding:40px 20px 56px; text-align:center;
+  }
+  main{ width:min(560px, 100%); }
+
+  .eyebrow{
+    margin:0 0 22px; font-size:11.5px; letter-spacing:.34em; text-transform:uppercase;
+    color:var(--gold);
+  }
+  .lede{
+    margin:0 0 4px; font-family:"Fraunces", Georgia, serif; font-style:italic; font-weight:300;
+    font-size:clamp(19px, 5vw, 24px); color:rgba(239,231,216,.72);
+  }
+
+  /* Signature: the countdown as spoken Spanish, not digits. */
+  .spoken{
+    margin:0; font-family:"Fraunces", Georgia, serif; font-style:italic; font-weight:500;
+    font-size:clamp(38px, 11.5vw, 66px); line-height:1.05; color:var(--bone);
+    letter-spacing:-.01em;
+  }
+  .spoken.arrived{ color:var(--gold); }
+
+  /* The line: a phone line running out. */
+  .line{
+    position:relative; height:1px; margin:30px auto 0; width:min(340px, 88%);
+    background:rgba(239,231,216,.13);
+  }
+  .line i{
+    position:absolute; left:0; top:0; height:1px; width:100%;
+    background:linear-gradient(90deg, var(--gold), var(--blush));
+    transform-origin:left center; transition:transform .9s linear;
+  }
+  .line b{
+    position:absolute; top:-3px; width:7px; height:7px; border-radius:50%;
+    background:var(--blush); transform:translateX(-50%); transition:left .9s linear;
+  }
+
+  .digits{
+    margin:18px 0 0; font-size:14px; letter-spacing:.26em;
+    font-variant-numeric:tabular-nums; color:rgba(239,231,216,.5);
+  }
+  .at{ margin:8px 0 0; font-size:12.5px; letter-spacing:.1em; color:rgba(239,231,216,.34); }
+
+  .note{
+    margin:38px auto 0; max-width:33ch; font-size:15px; line-height:1.65;
+    color:rgba(239,231,216,.62);
+  }
+
+  .ring{ animation:pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{opacity:1} 50%{opacity:.45} }
+
+  @media (prefers-reduced-motion: reduce){
+    .line i, .line b{ transition:none; }
+    .ring{ animation:none; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <p class="eyebrow" id="eyebrow">Dejen el tel&eacute;fono cerca</p>
+  <p class="lede" id="lede">Los llamamos en</p>
+
+  <p class="spoken" id="spoken" aria-live="polite">&nbsp;</p>
+
+  <div class="line" aria-hidden="true"><i id="fill"></i><b id="dot"></b></div>
+
+  <p class="digits" id="digits">&nbsp;</p>
+  <p class="at" id="at"></p>
+
+  <p class="note" id="note">
+    Contesten cuando suene.
+  </p>
+</main>
+
+<script>
+(function(){
+  /* =========================================================================
+     CU&Aacute;NTO FALTA
+       llamada.html            \u2192 25 minutos desde que abren la p\u00E1gina
+       llamada.html?m=10       \u2192 10 minutos desde que abren la p\u00E1gina
+       llamada.html?t=20:30    \u2192 cuenta hasta las 20:30 de hoy (hora de ellos)
+     ========================================================================= */
+  var DEFAULT_MINUTES = 20;
+
+  var qs = function(k){ var m = location.search.match(new RegExp('[?&]' + k + '=([^&]+)')); return m ? decodeURIComponent(m[1]) : null; };
+
+  var spoken = document.getElementById('spoken');
+  var lede   = document.getElementById('lede');
+  var eyebrow= document.getElementById('eyebrow');
+  var digits = document.getElementById('digits');
+  var atEl   = document.getElementById('at');
+  var note   = document.getElementById('note');
+  var fill   = document.getElementById('fill');
+  var dot    = document.getElementById('dot');
+
+  /* ---- target time ---- */
+  var target, total;
+  var t = qs('t');
+  if (t && /^\d{1,2}:\d{2}$/.test(t)){
+    var parts = t.split(':');
+    var d = new Date();
+    d.setHours(+parts[0], +parts[1], 0, 0);
+    if (d.getTime() <= Date.now()) d.setDate(d.getDate() + 1);   // ya pas\u00F3 hoy \u2192 ma\u00F1ana
+    target = d.getTime();
+  } else {
+    var mins = parseFloat(qs('m'));
+    if (!(mins > 0 && mins < 1440)) mins = DEFAULT_MINUTES;
+    target = Date.now() + mins * 60000;
+  }
+  total = Math.max(target - Date.now(), 1);
+
+  /* ---- n\u00FAmeros en palabras ---- */
+  var UNITS = ['cero','un','dos','tres','cuatro','cinco','seis','siete','ocho','nueve','diez',
+               'once','doce','trece','catorce','quince','diecis\u00E9is','diecisiete','dieciocho','diecinueve','veinte',
+               'veinti\u00FAn','veintid\u00F3s','veintitr\u00E9s','veinticuatro','veinticinco','veintis\u00E9is','veintisiete',
+               'veintiocho','veintinueve','treinta'];
+  var TENS = { 30:'treinta', 40:'cuarenta', 50:'cincuenta' };
+
+  function words(n){
+    if (n <= 30) return UNITS[n];
+    var ten = Math.floor(n / 10) * 10, unit = n % 10;
+    return unit ? TENS[ten] + ' y ' + UNITS[unit] : TENS[ten];
+  }
+
+  // "veinticinco minutos", "un minuto", "una hora y diez minutos"
+  function phrase(m){
+    if (m < 60) return words(m) + (m === 1 ? ' minuto' : ' minutos');
+    var hrs = Math.floor(m / 60), rem = m % 60;
+    var head = (hrs === 1) ? 'una hora' : words(hrs) + ' horas';
+    if (!rem) return head;
+    return head + ' y ' + words(rem) + (rem === 1 ? ' minuto' : ' minutos');
+  }
+
+  function two(n){ return (n < 10 ? '0' : '') + n; }
+
+  /* ---- hora exacta de la llamada, para que puedan planear ---- */
+  (function(){
+    var d = new Date(target);
+    atEl.textContent = 'Alrededor de las ' + d.getHours() + ':' + two(d.getMinutes());
+  })();
+
+  var done = false;
+
+  function tick(){
+    var left = target - Date.now();
+
+    if (left <= 0 && !done){
+      done = true;
+      eyebrow.textContent = 'Contesten';
+      lede.textContent = 'Es la hora.';
+      spoken.textContent = 'Los estamos llamando';
+      spoken.className = 'spoken arrived ring';
+      digits.textContent = '';
+      atEl.textContent = '';
+      note.textContent = 'Si no entra la llamada, marquen ustedes.';
+      fill.style.transform = 'scaleX(1)';
+      dot.style.left = '100%';
+      return;
+    }
+    if (done) return;
+
+    var secs = Math.ceil(left / 1000);
+    var mins = Math.ceil(secs / 60);
+
+    spoken.textContent = (secs > 60) ? phrase(mins) : 'menos de un minuto';
+
+    var mm = Math.floor(secs / 60);
+    digits.textContent = (mm >= 60)
+      ? Math.floor(mm / 60) + ':' + two(mm % 60) + ':' + two(secs % 60)
+      : two(mm) + ':' + two(secs % 60);
+
+    var ratio = Math.max(0, Math.min(1, left / total));
+    fill.style.transform = 'scaleX(' + ratio + ')';
+    dot.style.left = (ratio * 100) + '%';
+  }
+
+  tick();
+  setInterval(tick, 250);
+})();
+</script>
+</body>
+</html>
