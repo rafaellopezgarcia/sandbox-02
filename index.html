@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Los llamamos en un rato</title>
-<meta property="og:title" content="Tengan el teléfono cerca…">
-<meta property="og:description" content="Los vamos a llamar. Abran esto para ver cuánto falta.">
-<meta name="description" content="Los vamos a llamar. Abran esto para ver cuánto falta.">
+<title>Pon atención a tu correo</title>
+<meta property="og:title" content="Pon atención a tu correo electrónico…">
+<meta property="og:description" content="Te va a llegar un link. Abre esto para ver cuánto falta.">
+<meta name="description" content="Te va a llegar un link. Abre esto para ver cuánto falta.">
 <meta name="twitter:card" content="summary">
 <meta name="robots" content="noindex, noarchive">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -80,8 +80,8 @@
 </head>
 <body>
 <main>
-  <p class="eyebrow" id="eyebrow">Dejen el tel&eacute;fono cerca</p>
-  <p class="lede" id="lede">Los llamamos en</p>
+  <p class="eyebrow" id="eyebrow">Pon atenci&oacute;n a tu correo electr&oacute;nico</p>
+  <p class="lede" id="lede">Te llega el link de la videollamada en</p>
 
   <p class="spoken" id="spoken" aria-live="polite">&nbsp;</p>
 
@@ -91,7 +91,7 @@
   <p class="at" id="at"></p>
 
   <p class="note" id="note">
-    Contesten cuando suene.
+    Cuando llegue, &aacute;brelo para unirte. Hay algo que tienen que saber en persona.
   </p>
 </main>
 
@@ -99,9 +99,9 @@
 (function(){
   /* =========================================================================
      CU&Aacute;NTO FALTA
-       llamada.html            \u2192 25 minutos desde que abren la p\u00E1gina
-       llamada.html?m=10       \u2192 10 minutos desde que abren la p\u00E1gina
-       llamada.html?t=20:30    \u2192 cuenta hasta las 20:30 de hoy (hora de ellos)
+       llamada.html            \u2192 20 minutos desde que abre la p\u00E1gina
+       llamada.html?m=10       \u2192 10 minutos desde que abre la p\u00E1gina
+       llamada.html?t=20:30    \u2192 cuenta hasta las 20:30 de hoy (su hora local)
      ========================================================================= */
   var DEFAULT_MINUTES = 20;
 
@@ -159,7 +159,7 @@
   /* ---- hora exacta de la llamada, para que puedan planear ---- */
   (function(){
     var d = new Date(target);
-    atEl.textContent = 'Alrededor de las ' + d.getHours() + ':' + two(d.getMinutes());
+    atEl.textContent = 'Llega alrededor de las ' + d.getHours() + ':' + two(d.getMinutes());
   })();
 
   var done = false;
@@ -169,13 +169,13 @@
 
     if (left <= 0 && !done){
       done = true;
-      eyebrow.textContent = 'Contesten';
-      lede.textContent = 'Es la hora.';
-      spoken.textContent = 'Los estamos llamando';
+      eyebrow.textContent = 'Revisa tu correo';
+      lede.textContent = 'Ya te lo enviamos.';
+      spoken.textContent = 'El link est\u00E1 en tu bandeja';
       spoken.className = 'spoken arrived ring';
       digits.textContent = '';
       atEl.textContent = '';
-      note.textContent = 'Si no entra la llamada, marquen ustedes.';
+      note.textContent = 'Si no aparece, revisa la carpeta de spam o correo no deseado.';
       fill.style.transform = 'scaleX(1)';
       dot.style.left = '100%';
       return;
